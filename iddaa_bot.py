@@ -222,7 +222,6 @@ def ana_menu_kb():
          InlineKeyboardButton("🎫 Kupon Öner",     callback_data="kupon_3")],
         [InlineKeyboardButton("📊 Alt/Üst Kupon",  callback_data="altust"),
          InlineKeyboardButton("🏆 Puan Tablosu",   callback_data="puan")],
-        [InlineKeyboardButton("🔄 Veri Güncelle",  callback_data="guncelle")],
     ])
 
 # ── Handler'lar ───────────────────────────────────────────────────────────────
@@ -280,17 +279,6 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                  "Örnek: `Arsenal` veya `Bayern`")
         kb = [[InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")]]
         await q.edit_message_text(metin, reply_markup=InlineKeyboardMarkup(kb), parse_mode="Markdown")
-
-    elif q.data == "guncelle":
-        await q.edit_message_text("🔄 Excel güncelleniyor...")
-        try:
-            import subprocess
-            script = os.path.join(SCRIPT_DIR, "iddaa_analiz.py")
-            subprocess.run(["python3", script], timeout=120)
-            kb = [[InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")]]
-            await q.edit_message_text("✅ Excel güncellendi!", reply_markup=InlineKeyboardMarkup(kb))
-        except Exception as e:
-            await q.edit_message_text(f"❌ Güncelleme hatası: {e}")
 
     elif q.data == "ana_menu":
         gun = veri["guncelleme"]
