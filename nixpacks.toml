@@ -1,2 +1,11 @@
+[phases.setup]
+nixPkgs = ["python313"]
+
 [phases.install]
-cmds = ["pip install --no-cache-dir -r requirements.txt"]
+cmds = [
+  "pip install --no-cache-dir --upgrade pip",
+  "pip install --no-cache-dir python-telegram-bot[job-queue]==20.7 openpyxl==3.1.2 requests==2.31.0 APScheduler==3.10.4"
+]
+
+[start]
+cmd = "python iddaa_bot.py"
