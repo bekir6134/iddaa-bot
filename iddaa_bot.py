@@ -37,7 +37,7 @@ def excel_oku():
     except: pass
 
     # Oranlar (tüm ligler)
-    for sh in ["PL - Oranlar", "LL - Oranlar", "BL - Oranlar"]:
+    for sh in ["PL - Oranlar", "LL - Oranlar", "BL - Oranlar", "SL - Oranlar"]:
         if sh not in wb.sheetnames: continue
         lig = sh.split(" - ")[0]
         ws = wb[sh]
@@ -56,7 +56,7 @@ def excel_oku():
             except: pass
 
     # İstatistik (tüm ligler)
-    for sh in ["PL - Istatistik", "LL - Istatistik", "BL - Istatistik"]:
+    for sh in ["PL - Istatistik", "LL - Istatistik", "BL - Istatistik", "SL - Istatistik"]:
         if sh not in wb.sheetnames: continue
         lig = sh.split(" - ")[0]
         ws = wb[sh]
@@ -67,7 +67,7 @@ def excel_oku():
         veri["istatistik"][lig] = stat
 
     # Puan tablosu
-    for sh in ["PL - Puan Tablosu", "LL - Puan Tablosu", "BL - Puan Tablosu"]:
+    for sh in ["PL - Puan Tablosu", "LL - Puan Tablosu", "BL - Puan Tablosu", "SL - Puan Tablosu"]:
         if sh not in wb.sheetnames: continue
         lig = sh.split(" - ")[0]
         ws = wb[sh]
@@ -222,6 +222,7 @@ def ana_menu_kb():
          InlineKeyboardButton("🎫 Kupon Öner",     callback_data="kupon_3")],
         [InlineKeyboardButton("📊 Alt/Üst Kupon",  callback_data="altust"),
          InlineKeyboardButton("🏆 Puan Tablosu",   callback_data="puan")],
+        [InlineKeyboardButton("🔄 Veri Güncelle",  callback_data="guncelle")],
     ])
 
 # ── Handler'lar ───────────────────────────────────────────────────────────────
@@ -259,12 +260,12 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(metin, reply_markup=InlineKeyboardMarkup(kb), parse_mode="Markdown")
 
     elif q.data == "puan":
-        ligler = {"PL": [], "LL": [], "BL": []}
+        ligler = {"PL": [], "LL": [], "BL": [], "SL": []}
         for t in veri["puan"]:
             if t["lig"] in ligler:
                 ligler[t["lig"]].append(t)
         metin = "🏆 *Puan Tabloları (İlk 5)*\n\n"
-        isimler = {"PL": "Premier League", "LL": "La Liga", "BL": "Bundesliga"}
+        isimler = {"PL": "Premier League", "LL": "La Liga", "BL": "Bundesliga", "SL": "Süper Lig"}
         for lig, takimlar in ligler.items():
             metin += f"*{isimler[lig]}*\n"
             for t in takimlar[:5]:
@@ -279,6 +280,17 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                  "Örnek: `Arsenal` veya `Bayern`")
         kb = [[InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")]]
         await q.edit_message_text(metin, reply_markup=InlineKeyboardMarkup(kb), parse_mode="Markdown")
+
+    elif q.data == "guncelle":
+        await q.edit_message_text("🔄 Excel güncelleniyor...")
+        try:
+            import subprocess
+            script = os.path.join(SCRIPT_DIR, "iddaa_analiz.py")
+            subprocess.run(["python3", script], timeout=120)
+            kb = [[InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")]]
+            await q.edit_message_text("✅ Excel güncellendi!", reply_markup=InlineKeyboardMarkup(kb))
+        except Exception as e:
+            await q.edit_message_text(f"❌ Güncelleme hatası: {e}")
 
     elif q.data == "ana_menu":
         gun = veri["guncelleme"]
@@ -310,8 +322,8 @@ async def mesaj_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not bulunanlar:
         await update.message.reply_text(
             f"🔍 `{sorgu}` için yaklaşan maç bulunamadı.\n\n"
-            "Takım adını İngilizce yaz. Örnek:\n"
-            "`Arsenal`, `Bayern`, `Barcelona`, `Liverpool`",
+            "Takım adını yaz. Örnek:\n"
+            "`Arsenal`, `Bayern`, `Barcelona`, `Galatasaray`, `Fenerbahce`",
             parse_mode="Markdown"
         )
         return
