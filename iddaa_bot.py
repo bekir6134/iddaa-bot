@@ -398,8 +398,7 @@ def ana_menu_kb():
          InlineKeyboardButton("🎫 Kupon Öner",    callback_data="kupon_3")],
         [InlineKeyboardButton("📊 Alt/Üst Kupon", callback_data="altust"),
          InlineKeyboardButton("🔀 Handikap",      callback_data="handicap")],
-        [InlineKeyboardButton("🏆 Puan Tablosu",  callback_data="puan"),
-         InlineKeyboardButton("🔄 Güncelle",      callback_data="guncelle")],
+        [InlineKeyboardButton("🏆 Puan Tablosu",  callback_data="puan")],
     ])
 
 # ── Handler'lar ───────────────────────────────────────────────────────────────
@@ -461,16 +460,6 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(
             "⚽ *Maç Analizi*\n\nTakım adını yaz:\n`Galatasaray`, `Arsenal`, `Bayern`, `Inter`, `PSG`",
             reply_markup=InlineKeyboardMarkup(kb_ana), parse_mode="Markdown")
-
-    elif q.data == "guncelle":
-        await q.edit_message_text("🔄 Excel güncelleniyor... (2-5 dk sürebilir)")
-        try:
-            import subprocess
-            subprocess.run(["python", os.path.join(SCRIPT_DIR, "iddaa_analiz.py")], timeout=300)
-            await q.edit_message_text("✅ Excel güncellendi!",
-                                       reply_markup=InlineKeyboardMarkup(kb_ana))
-        except Exception as e:
-            await q.edit_message_text(f"❌ Güncelleme hatası: {e}")
 
     elif q.data == "ana_menu":
         gun = veri["guncelleme"]
@@ -551,8 +540,13 @@ def main():
     app.add_handler(CommandHandler("menu",  start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mesaj_handler))
-    app.job_queue.run_daily(otomatik_guncelle,
-                            time=datetime.strptime("08:00", "%H:%M").time())
+    # Türkiye saati 07:00 = UTC 04:00
+    from datetime import time as dtime
+    import pytz
+    app.job_queue.run_daily(
+        otomatik_guncelle,
+        time=dtime(hour=4, minute=0, tzinfo=pytz.utc),
+    )
 
     print("✅ Bot çalışıyor! Telegram'da /start yaz.")
     app.run_polling()
