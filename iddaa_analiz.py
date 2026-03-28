@@ -4,8 +4,13 @@ import time
 import re
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import os
+
+# Türkiye saati (UTC+3)
+TR = timezone(timedelta(hours=3))
+def simdi():
+    return datetime.now(TR)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -180,7 +185,7 @@ def yaz_puan_tablosu(ws, lig_adi, fd_code, mac_verisi=None):
     ws.row_dimensions[1].height = 30
     ws.row_dimensions[2].height = 20
     ws.merge_cells("A1:M1")
-    stil_baslik(ws, 1, 1, f"{lig_adi} — Puan Tablosu ({datetime.now().strftime('%d.%m.%Y')})",
+    stil_baslik(ws, 1, 1, f"{lig_adi} — Puan Tablosu ({simdi().strftime('%d.%m.%Y')})",
                 bg=RENKLER["baslik_bg"], boyut=13)
     for i, b in enumerate(["Sıra","Takım","O","G","B","M","AG","YG","A","Puan","Form","Ev G%","Dep G%"], 1):
         stil_baslik(ws, 2, i, b, bg=RENKLER["alt_baslik"], boyut=10)
@@ -520,7 +525,7 @@ def yaz_takim_istatistik(ws, lig_adi, maclar):
 def yaz_ozet(ws):
     ws.merge_cells("A1:F1")
     stil_baslik(ws, 1, 1,
-                f"İddaa Analiz Sistemi — Güncelleme: {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+                f"İddaa Analiz Sistemi — Güncelleme: {simdi().strftime('%d.%m.%Y %H:%M')}",
                 bg=RENKLER["baslik_bg"], boyut=14)
     ws.row_dimensions[1].height = 35
     for i, b in enumerate(["Lig","Sekme","İçerik","Son Güncelleme"], 1):
@@ -545,7 +550,7 @@ def yaz_ozet(ws):
                 (lig, f"{kisa} - Oranlar", "Bahis oranları (detaylı veri API kısıtı nedeniyle mevcut değil)"),
             ]
 
-    guncelleme = datetime.now().strftime("%d.%m.%Y %H:%M")
+    guncelleme = simdi().strftime("%d.%m.%Y %H:%M")
     for idx, (lig, sekme, icerik) in enumerate(sekmeler):
         row = idx + 3
         bg  = RENKLER["satir1"] if idx % 2 == 0 else RENKLER["satir2"]

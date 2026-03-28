@@ -6,11 +6,15 @@
 - Her gün 08:00'de Excel otomatik güncellenir
 """
 import os, re, logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (Application, CommandHandler, MessageHandler,
                            CallbackQueryHandler, ContextTypes, filters)
 import openpyxl
+
+TR = timezone(timedelta(hours=3))
+def simdi():
+    return datetime.now(TR)
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "BURAYA_TOKEN")
 SCRIPT_DIR     = os.path.dirname(os.path.abspath(__file__))
@@ -470,8 +474,8 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         with open(EXCEL_PATH, "rb") as f:
             await q.message.reply_document(
                 document=f,
-                filename=f"iddaa_analiz_{datetime.now().strftime('%d%m%Y_%H%M')}.xlsx",
-                caption=f"📊 İddaa Analiz — {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+                filename=f"iddaa_analiz_{simdi().strftime('%d%m%Y_%H%M')}.xlsx",
+                caption=f"📊 İddaa Analiz — {simdi().strftime('%d.%m.%Y %H:%M')}",
             )
         await q.message.reply_text("Ana menü:", reply_markup=ana_menu_kb())
 
