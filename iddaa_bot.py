@@ -398,7 +398,8 @@ def ana_menu_kb():
          InlineKeyboardButton("🎫 Kupon Öner",    callback_data="kupon_3")],
         [InlineKeyboardButton("📊 Alt/Üst Kupon", callback_data="altust"),
          InlineKeyboardButton("🔀 Handikap",      callback_data="handicap")],
-        [InlineKeyboardButton("🏆 Puan Tablosu",  callback_data="puan")],
+        [InlineKeyboardButton("🏆 Puan Tablosu",  callback_data="puan"),
+         InlineKeyboardButton("📥 Excel İndir",   callback_data="excel_indir")],
     ])
 
 # ── Handler'lar ───────────────────────────────────────────────────────────────
@@ -460,6 +461,19 @@ async def button_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(
             "⚽ *Maç Analizi*\n\nTakım adını yaz:\n`Galatasaray`, `Arsenal`, `Bayern`, `Inter`, `PSG`",
             reply_markup=InlineKeyboardMarkup(kb_ana), parse_mode="Markdown")
+
+    elif q.data == "excel_indir":
+        if not os.path.exists(EXCEL_PATH):
+            await q.edit_message_text("❌ Excel dosyası bulunamadı.")
+            return
+        await q.edit_message_text("📎 Excel hazırlanıyor...")
+        with open(EXCEL_PATH, "rb") as f:
+            await q.message.reply_document(
+                document=f,
+                filename=f"iddaa_analiz_{datetime.now().strftime('%d%m%Y_%H%M')}.xlsx",
+                caption=f"📊 İddaa Analiz — {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+            )
+        await q.message.reply_text("Ana menü:", reply_markup=ana_menu_kb())
 
     elif q.data == "ana_menu":
         gun = veri["guncelleme"]
