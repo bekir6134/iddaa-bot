@@ -547,22 +547,14 @@ def main():
     print("  İddaa Telegram Botu Başlatılıyor...")
     print("="*50)
 
-    # Excel yoksa veya 12 saatten eskiyse yenile
-    excel_yenile = not os.path.exists(EXCEL_PATH)
-    if not excel_yenile:
-        import time as _time
-        yas_saat = (_time.time() - os.path.getmtime(EXCEL_PATH)) / 3600
-        if yas_saat > 12:
-            excel_yenile = True
-            print(f"⚠️  Excel {yas_saat:.1f} saat eski, yenileniyor...")
-    if excel_yenile:
-        print("⚠️  Excel oluşturuluyor...")
-        try:
-            import subprocess
-            subprocess.run(["python", os.path.join(SCRIPT_DIR, "iddaa_analiz.py")], timeout=300)
-            print("✅ Excel oluşturuldu!")
-        except Exception as e:
-            print(f"❌ Excel oluşturulamadı: {e}")
+    # Her başlangıçta Excel'i yenile (deploy + sabah 07:00)
+    print("⚠️  Excel yenileniyor...")
+    try:
+        import subprocess
+        subprocess.run(["python", os.path.join(SCRIPT_DIR, "iddaa_analiz.py")], timeout=300)
+        print("✅ Excel oluşturuldu!")
+    except Exception as e:
+        print(f"❌ Excel oluşturulamadı: {e}")
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
