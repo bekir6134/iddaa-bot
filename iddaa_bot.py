@@ -485,11 +485,32 @@ async def mesaj_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     bulunanlar = mac_ara(veri, sorgu)
 
     if not bulunanlar:
-        await update.message.reply_text(
-            f"🔍 `{sorgu}` için yaklaşan maç bulunamadı.\n\n"
-            f"Şu an *{len(veri['oranlar'])}* yaklaşan maç mevcut.\n"
-            f"Takım adı yaz: `Galatasaray`, `Arsenal`, `Bayern`, `Inter`, `PSG`",
-            parse_mode="Markdown")
+        # Mevcut maçlardan örnek takım isimleri göster
+        ornek_takimlar = []
+        for m in veri["oranlar"][:12]:
+            ornek_takimlar.append(m["ev"].split()[-1])  # soyadı/kısa isim
+            ornek_takimlar.append(m["dep"].split()[-1])
+        # Tekrarsız, ilk 8
+        gorulenler = []
+        for t in ornek_takimlar:
+            if t not in gorulenler:
+                gorulenler.append(t)
+            if len(gorulenler) == 8:
+                break
+
+        metin = (f"🔍 `{sorgu}` için yaklaşan maç bulunamadı.\n\n"
+                 f"Şu an *{len(veri['oranlar'])}* yaklaşan maç mevcut.\n\n"
+                 f"Örnek takımlar:\n"
+                 f"`{'`, `'.join(gorulenler)}`")
+        # İlk 5 maçı buton olarak göster
+        kb_rows = []
+        for m in veri["oranlar"][:5]:
+            idx = veri["oranlar"].index(m)
+            kb_rows.append([InlineKeyboardButton(
+                f"{m['ev']} vs {m['dep']}", callback_data=f"mac_{idx}")])
+        kb_rows.append([InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")])
+        await update.message.reply_text(metin,
+            reply_markup=InlineKeyboardMarkup(kb_rows), parse_mode="Markdown")
         return
 
     kb_ana = [[InlineKeyboardButton("🏠 Ana Menü", callback_data="ana_menu")]]
@@ -526,8 +547,16 @@ def main():
     print("  İddaa Telegram Botu Başlatılıyor...")
     print("="*50)
 
-    if not os.path.exists(EXCEL_PATH):
-        print("⚠️  Excel bulunamadı, oluşturuluyor...")
+    # Excel yoksa veya 12 saatten eskiyse yenile
+    excel_yenile = not os.path.exists(EXCEL_PATH)
+    if not excel_yenile:
+        import time as _time
+        yas_saat = (_time.time() - os.path.getmtime(EXCEL_PATH)) / 3600
+        if yas_saat > 12:
+            excel_yenile = True
+            print(f"⚠️  Excel {yas_saat:.1f} saat eski, yenileniyor...")
+    if excel_yenile:
+        print("⚠️  Excel oluşturuluyor...")
         try:
             import subprocess
             subprocess.run(["python", os.path.join(SCRIPT_DIR, "iddaa_analiz.py")], timeout=300)
